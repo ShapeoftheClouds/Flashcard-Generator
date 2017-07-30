@@ -38,6 +38,7 @@ function createFlashCards() {
 	.then(function(response){
 		console.log("Creating a new card!")
 		newCardArray.push(new ClozeCard(response.frontcard, response.backcard));
+
 		fs.appendFile("./cards.txt", ", " + newCardArray, function(err) {
 			if(err) {
 				return console.log(err);
@@ -45,7 +46,7 @@ function createFlashCards() {
 		});
 		console.log(newCardArray);
 	});
-}
+};
 
 var firstPresidentCloze = new ClozeCard(
     "George Washington was the first president of the United States.", "George Washington");
