@@ -1,71 +1,93 @@
+// Requiring the fs npm
 var fs = require("fs");
+// Requiring the inquirer npm
 var inquirer = require("inquirer");
-var newCardArray = [];
-
-// The constructor should accept two arguments: text and cloze.
-var ClozeCard = function(text, cloze) {
-	// Close stuff goes here.
-	this.text = text;
-	this.cloze = cloze;
-}
-
+// card array
+var cardArray = [];
+// Starts the questions at 0
+var currentQuestion = 0;
+// Prompts the user to create a flashcard.
 inquirer.prompt ({
 	name: "flashcard",
 	type: "list", 
-	message: "Would you like to [CREATE] flashcards or [REVIEW] flashcards?",
-	choices: ["CREATE", "REVIEW"]
+	message: "Please [CREATE] a flashcard.",
+	choices: ["CREATE"]
 })
 .then(function(response){
-	if (response.flashcard.toUpperCase() === "CREATE") {
-		console.log("Create a flashcard!");
-		createFlashCards();
-	}
+	createFlashCards();
 });
 
+// Cloze constructor accepting two arguments: text and cloze.
+var ClozeCard = function(text, cloze) {
+	this.text = text;
+	this.cloze = cloze;
+};
+
+// Function for creating a cloze card.
 function createFlashCards() {
 	inquirer.prompt ([
 	{
-		name: "frontcard",
+		name: "statement",
 		type: "input",
-		message: "Type in flashcard question"
-	}, 
+		message: "Type in flashcard statement: "
+	} , 
 	{
-		name: "backcard",
+		name: "answer",
 		type: "input",
-		message: "Type in flashcard answer"
+		message: "Type in flashcard answer: "
 	}
 	])
-	.then(function(response){
-		console.log("Creating a new card!")
-		newCardArray.push(new ClozeCard(response.frontcard, response.backcard));
-
-		fs.appendFile("./cards.txt", ", " + newCardArray, function(err) {
+	.then(function(newCard){
+		// Pushes the user's card information to the card array
+		cardArray.push(new ClozeCard(newCard.statement, newCard.answer));
+		// Appends the user's card information to the test file
+		fs.appendFile('./clozecards.txt', JSON.stringify(cardArray), function(err) {
 			if(err) {
 				return console.log(err);
 			}
+			// Gives the user the option to create more cards, or review created cards
+			next();
 		});
-		console.log(newCardArray);
 	});
 };
 
-var firstPresidentCloze = new ClozeCard(
-    "George Washington was the first president of the United States.", "George Washington");
+// Function for reviewing cards
+function reviewFlashCards() {
+	inquirer.prompt ({
+		name: "guess", 
+		type: "input",
+		// Removes the cloze information from the card statement
+		message: cardArray[currentQuestion].text.replace(cardArray[currentQuestion].cloze, '...')
+	}).then(function(response){
+		if (response.guess.toLowerCase() === cardArray[currentQuestion].cloze.toLowerCase()) {
+			console.log(cardArray[currentQuestion].cloze + " is the correct answer!");
+		} else {
+			console.log("Try again! " + cardArray[currentQuestion].cloze + " was the correct answer.");
+		}
 
-// "George Washington"
-console.log(firstPresidentCloze.cloze); 
-
-// " ... was the first president of the United States.\
-var partial = firstPresidentCloze.text.split("George Washington ").pop();
-console.log(partial);
-
-// "George Washington was the first president of the United States.
-console.log(firstPresidentCloze.text);
-
-// Should throw or log an error because "oops" doesn't appear in "This doesn't work"
-var brokenCloze = new ClozeCard("This doesn't work", "oops");
-// The constructed object should have a cloze property that contains only the cloze-deleted portion of the text.
-// The constructed object should have a partial property that contains only the partial text.
-// The constructed object should have a fullText property that contains only the full text.
-// The constructor should throw or log an error when the cloze deletion does not appear in the input text.
-// Use prototypes to attach these methods, wherever possible.
-module.exports = ClozeCard;
+		if (currentQuestion < cardArray.length - 1) {
+			currentQuestion++; 
+			reviewFlashCards();
+		} else {
+			console.log("You've reviewed all the cards! Good job!");
+		}
+	})
+};
+// Prompts the user to either create new cards, or review already created cards.
+function next() {
+	inquirer.prompt ({
+		name: "next",
+		type: "list",
+		message: "Would you like to [CREATE] flashcards or [REVIEW] flashcards?",
+		choices: ["CREATE", "REVIEW"]
+	})
+	.then(function(response){
+	// If the response is create, the run the createFlashCard function
+	if (response.next.toUpperCase() === "CREATE") {
+		createFlashCards();
+	} else {
+		// If the response is not create, run the reviewFlashCard function
+		reviewFlashCards();
+	}
+})
+};

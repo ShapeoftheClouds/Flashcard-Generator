@@ -1,12 +1,7 @@
-
-// Node module exporting a constructor.
-module.exports = flashCard;
 // Require the inquirer npm
 var inquirer = require("inquirer");
 // Require the fs npm
 var fs = require("fs");
-// the cards.txt file
-var allCards = ("./cards.txt");
 // Create an array that new flash cards are pushed into
 var newCardArray = [];
 var currentQuestion = 0; 
@@ -19,9 +14,9 @@ inquirer.prompt ({
 		choices: ["CREATE"]
 	})
 .then(function(response){
-	// If the response is create, the run the createFlashCard function
+	// Create flashcards.
 		createFlashCards();
-})
+});
 
 // A Constructor accepting two arguments, front and back.
 function flashCard(front, back){
@@ -98,3 +93,6 @@ function next() {
 	}
 })
 };
+
+// Node module exporting a constructor.
+module.exports = flashCard;
